@@ -30,8 +30,7 @@ The first thing your plugin will have to do to gain access to this virion's API 
 ```php
 final class MyPlugin extends PluginBase{
 
-	/** @var BlockDataWorldManager */
-	private $manager;
+	private BlockDataWorldManager $manager;
 	
 	protected function onEnable() : void{
 		$this->manager = BlockDataWorldManager::create($this);
@@ -47,11 +46,9 @@ class BlockHistoryData extends BlockData{ // stores when block was placed and by
 		return new BlockHistoryData($nbt->getString("placer"), $nbt->getLong("timestamp"));
 	}
 	
-	/** @var string */
-	private $placer;
+	private string $placer;
 
-	/** @var int */
-	private $timestamp;
+	private int $timestamp;
 	
 	public function __construct(string $placer, ?int $timestamp = null){
 		$this->placer = $placer;
@@ -84,17 +81,17 @@ Wew, now all that's remaining is event handling!
 ```php
 public function onBlockPlace(BlockPlaceEvent $event) : void{
 	$block = $event->getBlock();
-	$pos = $block->getPos();
+	$pos = $block->getPosition();
 	$data = new BlockHistoryData($event->getPlayer()->getName());
-	$this->manager->getWorld($pos->getWorld())->setBlockDataAt($pos->x, $pos->y, $pos->z, $data);
+	$this->manager->getWorld($pos->getWorld())->setBlockData($pos, $data);
 }
 
 public function onPlayerInteract(PlayerInteractEvent $event) : void{
 	if($event->getAction() === PlayerInteractEvent::RIGHT_CLICK_BLOCK && $event->getItem()->getId() === ItemIds::STICK){
 		$block = $event->getBlock();
-		$pos = $block->getPos();
+		$pos = $block->getPosition();
 		
-		$data = $this->manager->get($pos->getWorld())->getBlockDataAt($pos->x, $pos->y, $pos->z);
+		$data = $this->manager->get($pos->getWorld())->getBlockData($pos);
 		if($data instanceof BlockHistoryData){
 			$event->getPlayer()->sendMessage(TextFormat::LIGHT_PURPLE . "This block was placed by " . TextFormat::WHITE . $data->getPlacer() . TextFormat::LIGHT_PURPLE . " on " . TextFormat::WHITE . gmdate("d-m-Y H:i:s", $data->getTimestamp()));
 		}

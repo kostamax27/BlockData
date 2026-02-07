@@ -8,7 +8,6 @@ use cosmicpe\blockdata\BlockData;
 use cosmicpe\blockdata\BlockDataFactory;
 use LevelDB;
 use LevelDBWriteBatch;
-use pocketmine\nbt\BaseNbtSerializer;
 use pocketmine\nbt\BigEndianNbtSerializer;
 use pocketmine\nbt\TreeRoot;
 use pocketmine\world\World;
@@ -16,19 +15,17 @@ use function array_key_exists;
 
 final class BlockDataChunk{
 
-	/** @var LevelDB */
-	private $database;
+	private LevelDB $database;
 
-	/** @var BigEndianNbtSerializer */
-	private $serializer;
+	private BigEndianNbtSerializer $serializer;
 
-	/** @var BlockData[]|null[] */
-	private $block_cache = [];
+	/** @var array<int, BlockData|null> */
+	private array $block_cache = [];
 
-	/** @var BlockData[]|null[] */
-	private $update_queue = [];
+	/** @var array<int, BlockData|null> */
+	private array $update_queue = [];
 
-	public function __construct(LevelDB $database, BaseNbtSerializer $serializer){
+	public function __construct(LevelDB $database, BigEndianNbtSerializer $serializer){
 		$this->database = $database;
 		$this->serializer = $serializer;
 	}

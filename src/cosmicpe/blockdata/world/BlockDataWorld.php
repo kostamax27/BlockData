@@ -6,35 +6,28 @@ namespace cosmicpe\blockdata\world;
 
 use cosmicpe\blockdata\BlockData;
 use LevelDB;
+use pocketmine\math\Vector3;
 use pocketmine\nbt\BigEndianNbtSerializer;
-use pocketmine\plugin\Plugin;
+use pocketmine\world\format\Chunk;
 use pocketmine\world\World;
+use Symfony\Component\Filesystem\Path;
 
 final class BlockDataWorld{
 
-	/** @var BigEndianNbtSerializer */
-	private $serializer;
+	private BigEndianNbtSerializer $serializer;
 
-	/** @var World */
-	private $world;
+	private World $world;
 
-	/** @var LevelDB */
-	private $database;
+	private LevelDB $database;
 
-	/** @var BlockDataChunk[] */
-	private $chunks = [];
+	/** @var array<int, BlockDataChunk> */
+	private array $chunks = [];
 
-	public function __construct(Plugin $plugin, World $world){
+	public function __construct(string $directory, World $world){
 		$this->serializer = new BigEndianNbtSerializer();
 		$this->world = $world;
 
-		$directory = $plugin->getDataFolder() . "blockdata/";
-		if(!is_dir($directory)){
-			/** @noinspection MkdirRaceConditionInspection */
-			mkdir($directory);
-		}
-
-		$this->database = new LevelDB($directory . $world->getFolderName(), [
+		$this->database = new LevelDB(Path::join($directory, $world->getFolderName()), [
 			"compression" => LEVELDB_SNAPPY_COMPRESSION,
 			"block_size" => 64 * 1024
 		]);
@@ -44,12 +37,20 @@ final class BlockDataWorld{
 		return $this->world;
 	}
 
+	public function getBlockData(Vector3 $pos) : ?BlockData{
+		return $this->getBlockDataAt($pos->getFloorX(), $pos->getFloorY(), $pos->getFloorZ());
+	}
+
 	public function getBlockDataAt(int $x, int $y, int $z) : ?BlockData{
-		return $this->chunks[World::chunkHash($x >> 4, $z >> 4)]->getBlockDataAt($x, $y, $z);
+		return $this->chunks[World::chunkHash($x >> Chunk::COORD_BIT_SIZE, $z >> Chunk::COORD_BIT_SIZE)]->getBlockDataAt($x, $y, $z);
+	}
+
+	public function setBlockData(Vector3 $pos, ?BlockData $data) : void{
+		$this->setBlockDataAt($pos->getFloorX(), $pos->getFloorY(), $pos->getFloorZ(), $data);
 	}
 
 	public function setBlockDataAt(int $x, int $y, int $z, ?BlockData $data) : void{
-		$this->chunks[World::chunkHash($x >> 4, $z >> 4)]->setBlockDataAt($x, $y, $z, $data);
+		$this->chunks[World::chunkHash($x >> Chunk::COORD_BIT_SIZE, $z >> Chunk::COORD_BIT_SIZE)]->setBlockDataAt($x, $y, $z, $data);
 	}
 
 	public function loadChunk(int $chunkX, int $chunkZ) : void{

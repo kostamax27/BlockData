@@ -16,11 +16,9 @@ use pocketmine\Server;
 
 final class BlockDataWorldListener implements Listener{
 
-	/** @var Plugin */
-	private $plugin;
+	private Plugin $plugin;
 
-	/** @var BlockDataWorldManager */
-	private $manager;
+	private BlockDataWorldManager $manager;
 
 	public function __construct(Plugin $plugin, BlockDataWorldManager $manager){
 		$this->plugin = $plugin;
